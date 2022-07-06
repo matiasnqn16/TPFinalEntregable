@@ -10,7 +10,7 @@ class pasajero{
 		$this->pnombre = "";
 		$this->papellido = "";
 		$this->ptelefono = "";
-		$this->ObjViaje = "";
+		$this->ObjViaje = new viaje();
 	}
 
 	public function cargar($rdoc,$pnom,$pap,$ptel,$objViaje){		
@@ -76,7 +76,14 @@ class pasajero{
 					$this->setPnombre($row2['pnombre']);
 					$this->setPapellido($row2['papellido']);
 					$this->setPtelefono($row2['ptelefono']);
-					$this->setObjViaje($row2['idviaje']);
+
+
+					//cargar viaje
+					$obj_viaje = new Viaje();
+					$obj_viaje->Buscar($row2['idviaje']);
+               		$this->setObjViaje($obj_viaje);
+
+					/* $this->setObjViaje($row2['idviaje']); */
 					$resp= true;
 				}				
 			
@@ -139,7 +146,7 @@ class pasajero{
 		$base=new BaseDatos();
 		$resp= false;
 		$consultaInsertar="INSERT INTO pasajero(rdocumento,pnombre,papellido,ptelefono,idviaje) 
-				VALUES (".$this->getRdocumento().",'".$this->getPnombre()."','".$this->getPapellido()."','".$this->getPtelefono()."','".$this->getObjViaje()."')";
+				VALUES (".$this->getRdocumento().",'".$this->getPnombre()."','".$this->getPapellido()."','".$this->getPtelefono()."','".$this->getObjViaje()->getIdviaje()."')";
 		
 		if($base->Iniciar()){
 
@@ -164,7 +171,7 @@ class pasajero{
 	public function modificar(){
 	    $resp =false; 
 	    $base=new BaseDatos();
-		$consultaModifica="UPDATE pasajero SET pnombre='".$this->getPnombre()."',papellido='".$this->getPapellido()."',ptelefono='".$this->getPtelefono()."',idviaje='".$this->getObjViaje()."' WHERE rdocumento=". $this->getRdocumento();
+		$consultaModifica="UPDATE pasajero SET pnombre='".$this->getPnombre()."',papellido='".$this->getPapellido()."',ptelefono='".$this->getPtelefono()."',idviaje='".$this->getObjViaje()->getIdviaje()."' WHERE rdocumento=". $this->getRdocumento();
 		if($base->Iniciar()){
 			if($base->Ejecutar($consultaModifica)){
 			    $resp=  true;

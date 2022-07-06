@@ -10,8 +10,8 @@ class viaje{
 		$this->vdest = "";
 		$this->vcantmaxpasajeros = "";
 		$this->rdocumento = "";
-		$this->objEmpresa = "";
-		$this->objResp = "";
+		$this->objEmpresa = new empresa();
+		$this->objResp = new responsable();
 		$this->vimporte = "";
 		$this->tipoasiento = "";
 		$this->idayvuelta = "";
@@ -48,6 +48,7 @@ class viaje{
 	public function setVcantmaxpasajeros($nvcant){
 		$this->vcantmaxpasajeros = $nvcant;
 	}
+	///////////////////////////
 	public function getobjEmpresa(){
 		return $this->objEmpresa;
 	}
@@ -60,6 +61,7 @@ class viaje{
 	public function setobjResp($nrnumempleado){
 		$this->objResp = $nrnumempleado;
 	}
+	////////////////////////////
 	public function getVimporte(){
 		return $this->vimporte;
 	}
@@ -106,8 +108,20 @@ class viaje{
 					$this->setIdviaje($idvia);
 					$this->setVdest($row2['vdestino']);
 					$this->setVcantmaxpasajeros($row2['vcantmaxpasajeros']);
-					$this->setobjEmpresa($row2['idempresa']);
-					$this->setobjResp($row2['rnumeroempleado']);
+
+
+					$obj_empresa = new empresa();
+					$obj_empresa->Buscar($row2['idempresa']);
+					$this->setobjEmpresa($obj_empresa);
+					/* $this->setobjEmpresa($row2['idempresa']); */
+
+
+					$obj_resp = new responsable();
+					$obj_resp->Buscar($row2['rnumeroempleado']);
+					$this->setobjResp($obj_resp);
+					/* $this->setobjResp($row2['rnumeroempleado']); */
+
+
 					$this->setVimporte($row2['vimporte']);
 					$this->setTipoasiento($row2['tipoAsiento']);
 					$this->setIdayvuelta($row2['idayvuelta']);
@@ -144,11 +158,11 @@ class viaje{
 					$idviaje=$row2['idviaje'];
 					$vdestino=$row2['vdestino'];
 					$vcantmaxpasajeros=$row2['vcantmaxpasajeros'];
-					
+					// listo la id, luego busco esa id dentro del
 					$idmpresa=$row2['idempresa'];
 					$empresa = new empresa();
 					$empresa->Buscar($idmpresa);
-
+					// idem lo de arriba
 					$idesp=$row2['rnumeroempleado'];
 					$empleado = new responsable();
 					$empleado->Buscar($idesp);
@@ -255,7 +269,7 @@ class viaje{
 		$resp= false;
 		
 		$consultaInsertar="INSERT INTO viaje(idviaje,vdestino,vcantmaxpasajeros,idempresa,rnumeroempleado,vimporte,tipoAsiento,idayvuelta) 
-				VALUES (".$this->getIdviaje().",'".$this->getVdest()."','".$this->getVcantmaxpasajeros()."','".$this->getobjEmpresa()."','".$this->getobjResp()."','".$this->getVimporte()."','".$this->getTipoasiento()."','".$this->getIdayvuelta()."')";
+				VALUES (".$this->getIdviaje().",'".$this->getVdest()."','".$this->getVcantmaxpasajeros()."','".$this->getobjEmpresa()->getIdempresa()."','".$this->getobjResp()->getRnumeroempleado()."','".$this->getVimporte()."','".$this->getTipoasiento()."','".$this->getIdayvuelta()."')";
 		
 		if($base->Iniciar()){
 
@@ -280,7 +294,10 @@ class viaje{
 	public function modificar(){
 	    $resp =false; 
 	    $base=new BaseDatos();
-		$consultaModifica="UPDATE viaje SET vdestino='".$this->getVdest()."',vcantmaxpasajeros='".$this->getVcantmaxpasajeros()."',idempresa='". $this->getobjEmpresa()."',rnumeroempleado='". $this->getobjResp()."',vimporte='". $this->getVimporte()."',tipoAsiento='". $this->getTipoasiento()."',idayvuelta='". $this->getIdayvuelta()."' WHERE idviaje=". $this->getIdviaje();
+		$idEmpresa = $this->getobjEmpresa()->getIdempresa();
+		$rnumemp = $this->getobjResp()->getRnumeroempleado();
+		/* var_dump("AAAAAAAAAAAAAAAACCCCCCCCCCAAAA". $rnumemp); */
+		$consultaModifica="UPDATE viaje SET vdestino='".$this->getVdest()."',vcantmaxpasajeros='".$this->getVcantmaxpasajeros()."',idempresa='". $idEmpresa."',rnumeroempleado='".$rnumemp ."',vimporte='". $this->getVimporte()."',tipoAsiento='". $this->getTipoasiento()."',idayvuelta='". $this->getIdayvuelta()."' WHERE idviaje=". $this->getIdviaje();
 		if($base->Iniciar()){
 			if($base->Ejecutar($consultaModifica)){
 			    $resp=  true;
