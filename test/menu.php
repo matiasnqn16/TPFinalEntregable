@@ -389,7 +389,10 @@ function agregarPasajero($id){
                 echo "\nEste pasajero puede que este cargado o este en otro viaje\n";
                 $done = true;
             }else{
-                $agregarPasajero->cargar($nDni,$nNombre,$nApellido,$nTelefono,$id);
+                // inicio el objeto viaje para pasarlo
+                $objViaje = new viaje();
+                $objViaje->Buscar($id);
+                $agregarPasajero->cargar($nDni,$nNombre,$nApellido,$nTelefono,$objViaje);
                 $agregarPasajero->insertar();
                 echo "\nagregado con exito!";
                 $done = true;
@@ -420,14 +423,14 @@ function modificarPasajero($id){
         if($modPasajero->Buscar($dni)){
             echo "\ndni correcto";
             
-            echo "\ningrese el nuevo dni: ";
+           /*  echo "\ningrese el nuevo dni: ";
             $nDni= trim(fgets(STDIN));
             //creo bandera por si el dni cambia y es necesario borrar el viejo
             $flag = false;
             if($nDni == $dni){
                 $flag = true;
-            }
-            echo "Ingrese el nombre: ";
+            } */
+            echo "\nIngrese el nombre: ";
             $nNombre= trim(fgets(STDIN));
             echo "ingrese el apellido: ";
             $nApellido= trim(fgets(STDIN));
@@ -448,19 +451,28 @@ function modificarPasajero($id){
                 echo "(si desea volver al menu anterior teclee 'salir')";
                 echo "\nIngrese el id del viaje de la lista de arriba: ";
                 $nViaje= trim(fgets(STDIN));
+                // inicio el objeto viaje para pasarlo
+                $objViaje = new viaje();
+                $objViaje->Buscar($nViaje);
                 if(array_search($nViaje,$arrayDeIds)){
-                    $modPasajero->setRdocumento($nDni);
-                    $modPasajero->setPnombre($nNombre);
-                    $modPasajero->setPapellido($nApellido);
-                    $modPasajero->setPtelefono($nTelefono);
-                    $modPasajero->setObjViaje($nViaje);
-
-                    $modPasajero->modificar();
-                    if(!$flag){
+                    /* if(!$flag){
                         $viejoPas = new pasajero();
                         $viejoPas->Buscar($dni);
                         $viejoPas->eliminar();
-                    }
+                        // reseteo el obj pasajero 
+                        $modPasajero = NULL;
+                        $modPasajero = new pasajero();
+                    } */
+                    
+                    $modPasajero->setRdocumento($dni);
+                    $modPasajero->setPnombre($nNombre);
+                    $modPasajero->setPapellido($nApellido);
+                    $modPasajero->setPtelefono($nTelefono);
+                    $modPasajero->setObjViaje($objViaje);
+                    echo $modPasajero;
+                    /* $respuesta = $modPasajero->modificar();
+                    echo "\n/////////////////////////
+                    \n".$respuesta."\n "; */
                     $done = true;
                     $salir = true;
                 }if($nViaje == "salir"){
@@ -545,7 +557,6 @@ function agregarViaje(){
         ";
         $obj_empresa =  new empresa();
         $colempresas = $obj_empresa->listar("");
-        var_dump($colempresas);
         $arrayDeIds = array(0);
         foreach ($colempresas as $unaempresa) {
             array_push($arrayDeIds,$unaempresa->getIdempresa());
@@ -593,7 +604,14 @@ function agregarViaje(){
                     $newViaje =  new viaje();
                     $autoid=$newViaje->contarIdviaje();
                     do{
-                        $newViaje->cargar($autoid,$destino,$cantMaxPasajeros,$empresa,$responsable,$importe,$tipoasiento,$idayvuelta);
+                            //
+                        $OBJempresa = new empresa();
+					    $OBJempresa->Buscar($empresa);
+                            //
+                        $OBJempleado = new responsable();
+					    $OBJempleado->Buscar($responsable);
+
+                        $newViaje->cargar($autoid,$destino,$cantMaxPasajeros,$OBJempresa,$OBJempleado,$importe,$tipoasiento,$idayvuelta);
                         $respuesta = $newViaje->insertar();
                         $autoid++;
                     }while(!$respuesta);
@@ -654,7 +672,31 @@ function modificarViaje(){
         }while(!$verdad);
 
         echo "Ingrese cantMaxPasajeros: ";
-        $cantMaxPasajeros = trim(fgets(STDIN));
+        /* $cantMaxPasajeros = trim(fgets(STDIN)); */
+        ///////////////////////////////////////////////////////////
+
+        $bd = new BaseDatos();
+        $query  = "SELECT COUNT(*) as total FROM viaje INNER JOIN pasajero ON pasajero.idviaje = viaje.idviaje WHERE pasajero.idviaje = " . $opc;
+        if($bd->iniciar()){
+            if ($bd->Ejecutar($query)){
+                if ($tot = $bd->Registro()){
+                    $cantPas = $tot['total'];
+                }
+            }
+        }
+        
+        $otraVerdad = false;
+        do{
+            $cantMaxPasajeros = trim(fgets(STDIN));
+            if($cantMaxPasajeros < $cantPas){
+                echo "\nLa cantidad maxima no debe ser menos a la cantida de pasajeros que hay en el viaje
+                \nporfavor ingrese otro: ";
+            }else{
+                $otraVerdad = true;
+            }
+
+        }while(!$otraVerdad);
+        ////////////////////////////////////////////////////////////
     //---------
         echo "\n A continuacion se listaran las empresas
         ";
@@ -708,8 +750,14 @@ function modificarViaje(){
                     $newViaje->Buscar($opc);
                     $newViaje->setVdest($destino);
                     $newViaje->setVcantmaxpasajeros($cantMaxPasajeros);
-                    $newViaje->setobjEmpresa($empresa);
-                    $newViaje->setobjResp($responsable);
+                    // busco el obj Empresa
+                    $OBJempresa = new empresa();
+					$OBJempresa->Buscar($empresa);
+                    $newViaje->setobjEmpresa($OBJempresa);
+                    // busco el obj resp
+                    $OBJempleado = new responsable();
+					$OBJempleado->Buscar($responsable);
+                    $newViaje->setobjResp($OBJempleado);
                     $newViaje->setVimporte($importe);
                     $newViaje->setTipoasiento($tipoasiento);
                     $newViaje->setIdayvuelta($idayvuelta);
